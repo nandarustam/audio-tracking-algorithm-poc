@@ -3,6 +3,7 @@ var playedDuration = 0;
 var totalDuration = 0;
 var completionPercentage = 0;
 var pairs = [];
+var lastIndex = 0;
 var currentPair = {};
 
 function play(currentTime) {
@@ -43,6 +44,7 @@ function insert(newPair) {
 
   pairs.splice(ii, 0, newPair); // insert the new pair into its proper position (sorted)
   timeSpent += newPair.en - newPair.st; // add to total timestamp
+  lastIndex = ii;
 }
 
 function calculate() {

@@ -88,10 +88,15 @@
 
         // render list of pair
         let pairsText = "[";
-        pairs.forEach(function(pair) {
+        for (let ii = 0; ii < pairs.length; ii++) {
           if (pairsText.length > 1) pairsText += ",";
-          pairsText += "<span style='padding:3px;margin:3px;background-color:#ccc;'>" + pair.st + ", " + pair.en + "</span>";
-        });
+          let pair = pairs[ii];
+          let boldStyle = "";
+          if (ii === lastIndex) {
+            boldStyle = "font-weight:bold;"
+          }
+          pairsText += "<span style='padding:3px;margin:3px;background-color:#ccc;" + boldStyle + "'>" + getMMSS(pair.st) + ", " + getMMSS(pair.en) + "</span>";
+        };
         pairsText += "]";
         $("#list_pair").html(pairsText);
 
