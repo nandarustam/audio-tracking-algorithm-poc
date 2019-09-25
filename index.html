@@ -1,0 +1,114 @@
+<html>
+<head>
+  <title>Audio Tracking Proof of Concept</title>
+</head>
+<body>
+  <div style="margin-top: 20px; margin-left: 20px;">
+    <audio id="audio" controls style="width: 1000px;">
+      <source src="https://obs.line-scdn.net/0hVFm2-oIOCWlQSyJtPsR2PnQdCgZjOhBqPn0ESmszIjd_fxs4bipEWnwcUQ1_fhlobCUTDHNPX1A4eh43OyQWXXw">
+    </audio>
+    <div style="margin-top: 10px; line-height: 2;">
+      List of Pairs: <span id="list_pair"></span><br>
+      Total TimeSpent: <span id="time_spent" style="font-weight: bold;"></span><br>
+      Played Duration: <span id="played_duration" style="font-weight: bold;"></span><br>
+      Completion Percentage: <span id="completion_percentage" style="font-weight: bold;"></span><br>
+    </div>
+    <button id="endButton" style="font-size: 120%; margin-top: 10px; padding: 5px; padding-left: 10px; padding-right: 10px; cursor: pointer; border-radius: 5px;">Trigger Stop / Next / Prev / AutoNext</button>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script src="algorithm.js"></script>
+  <script>
+    $(document).ready(function () {
+      let audio = $("audio");
+      let currentTime = 0;
+      let seekTime = 0;
+      let isPlaying = false;
+      let isPausing = false;
+      let isSeeking = false;
+      let isEnding = false;
+      let lastCall = 'pause';
+      totalDuration = audio.prop('duration');
+
+      audio.on('play', function() {
+        isPlaying = true;
+      });
+      audio.on('pause', function() {
+        isPausing = true;
+      });
+      audio.on('seeking', function() {
+        isSeeking = true;
+      });
+      audio.on('ended', function() {
+        end(currentTime);
+        $("#endButton").prop('disabled', true);
+        $("#audio").css('filter', "opacity(0.5)");
+      });
+
+      $("#endButton").click(function() {
+        if (audio.prop('paused')) {
+          isEnding = true;
+          calculate();
+        } else {
+          audio.trigger('pause');
+          isEnding = true;
+          end(currentTime);
+        }
+        $("#endButton").prop('disabled', true);
+        $("#audio").css('filter', "opacity(0.5)");
+      });
+
+      setInterval(function() {
+        let previousTime = currentTime;
+        currentTime = Math.floor(audio.prop('currentTime'));
+
+        if (!isEnding) {
+          if (!isSeeking) {
+            seekTime = previousTime;
+          }
+
+          if (isPlaying) {
+            if (isSeeking && lastCall != 'pause') {
+              seek(seekTime, currentTime);
+              lastCall = 'seek';
+            } else {
+              play(currentTime);
+              lastCall = 'play';
+            }
+            isPlaying = false;
+            isPausing = false;
+            isSeeking = false;
+          } else if (isPausing & !isSeeking) {
+            pause(currentTime);
+            lastCall = 'pause';
+            isPlaying = false;
+            isPausing = false;
+            isSeeking = false;
+          }
+        }
+
+        // render list of pair
+        let pairsText = "[";
+        pairs.forEach(function(pair) {
+          if (pairsText.length > 1) pairsText += ",";
+          pairsText += "<span style='padding:3px;margin:3px;background-color:#ccc;'>" + pair.st + ", " + pair.en + "</span>";
+        });
+        pairsText += "]";
+        $("#list_pair").html(pairsText);
+
+        // render time spent
+        $("#time_spent").html(getMMSS(timeSpent));
+
+        // render played duration
+        if (playedDuration > 0) {
+          $("#played_duration").html(getMMSS(playedDuration));
+        }
+
+        // render completion percentage
+        if (completionPercentage > 0) {
+          $("#completion_percentage").html(completionPercentage.toFixed(2) + "%");
+        }
+      }, 100);
+    });
+  </script>
+</body>
+</html>
